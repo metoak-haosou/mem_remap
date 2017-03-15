@@ -1,5 +1,5 @@
 /***
-	这个驱动使用ioremap向用户空间返回虚拟地址
+	这个驱动使用ioremap做虚拟地址映射，然后用read间接想用户传递数据
 ***/
 
 #include <linux/kernel.h>
@@ -23,7 +23,7 @@
 
 #define _MAJ 240
 #define _MIN 0
-#define _NAME "mem_remap_ioremap_1"
+#define _NAME "mem_remap_ioremap_2"
 
 static dev_t dev;
 static struct cdev *cdev_p;
@@ -31,11 +31,11 @@ static struct class *drv_class;
 
 //打开文件函数
 /**
-	FUNCtION:mem_remap_ioremap_1_open
+	FUNCtION:mem_remap_ioremap_2_open
 	这个函数用来映射物理地址到虚拟地址上
 **/
 static int 
-mem_remap_ioremap_1_open(struct inode *inode, struct file *fp)
+mem_remap_ioremap_2_open(struct inode *inode, struct file *fp)
 {
 	printk(KERN_NOTICE"open\n");
 	
@@ -43,11 +43,11 @@ mem_remap_ioremap_1_open(struct inode *inode, struct file *fp)
 }
 //关闭文件函数
 /**
-	FUNCtION:mem_remap_ioremap_1_release
+	FUNCtION:mem_remap_ioremap_2_release
 	这个函数用来将open函数申请的虚拟地址返还给内核
 **/
 static int 
-mem_remap_ioremap_1_release(struct inode *inode, struct file *fp)
+mem_remap_ioremap_2_release(struct inode *inode, struct file *fp)
 {
 	printk(KERN_NOTICE"release\n");
 	return 0;
@@ -55,22 +55,22 @@ mem_remap_ioremap_1_release(struct inode *inode, struct file *fp)
 }
 //读函数
 /**
-	FUNCtION:mem_remap_ioremap_1_read
-	这个函数用来向用户空间返回我们申请到的虚拟地址
+	FUNCtION:mem_remap_ioremap_2_read
+	这个函数向用户返回一帧数据
 **/
 static ssize_t 
-mem_remap_ioremap_1_read (struct file *fp, char __user *ubuf, size_t count, loff_t *ppos)
+mem_remap_ioremap_2_read (struct file *fp, char __user *ubuf, size_t count, loff_t *ppos)
 {
 	printk(KERN_NOTICE"read\n");
 	return 0;
 }
 //写函数
 /**
-	FUNCtION:mem_remap_ioremap_1_write
+	FUNCtION:mem_remap_ioremap_2_write
 	这个函数暂时不用
 **/
 static ssize_t 
-mem_remap_ioremap_1_write (struct file *fp, const char __user *ubuf, size_t count, loff_t *ppos)
+mem_remap_ioremap_2_write (struct file *fp, const char __user *ubuf, size_t count, loff_t *ppos)
 {	
 	printk(KERN_NOTICE"write\n");
 	return 0;
@@ -78,12 +78,12 @@ mem_remap_ioremap_1_write (struct file *fp, const char __user *ubuf, size_t coun
 
 
 
-static struct file_operations mem_remap_ioremap_1_fops={
+static struct file_operations mem_remap_ioremap_2_fops={
 	.owner = THIS_MODULE,
-	.open = mem_remap_ioremap_1_open,
-	.release = mem_remap_ioremap_1_release,
-	.read = mem_remap_ioremap_1_read,
-	.write = mem_remap_ioremap_1_write,
+	.open = mem_remap_ioremap_2_open,
+	.release = mem_remap_ioremap_2_release,
+	.read = mem_remap_ioremap_2_read,
+	.write = mem_remap_ioremap_2_write,
 };
 
 
@@ -91,7 +91,7 @@ static struct file_operations mem_remap_ioremap_1_fops={
 	init函数
 */
 static int __init 
-mem_remap_ioremap_1_init(void)
+mem_remap_ioremap_2_init(void)
 {
 	dev = MKDEV(_MAJ,_MIN);
 	if(register_chrdev_region(dev,1,_NAME)){
@@ -99,7 +99,7 @@ mem_remap_ioremap_1_init(void)
 	}
 	
 	cdev_p = cdev_alloc();
-	cdev_init(cdev_p,&mem_remap_ioremap_1_fops);
+	cdev_init(cdev_p,&mem_remap_ioremap_2_fops);
 	cdev_add(cdev_p,dev,1);
 	drv_class = class_create(THIS_MODULE,_NAME);
 	device_create(drv_class, NULL,dev,NULL, _NAME);
@@ -112,7 +112,7 @@ mem_remap_ioremap_1_init(void)
 	exit函数
 */
 static void __exit
-mem_remap_ioremap_1_exit(void)
+mem_remap_ioremap_2_exit(void)
 {
 	cdev_del(cdev_p);
 	//反注册设备号
@@ -129,5 +129,5 @@ MODULE_VERSION("v1.0");
 MODULE_DESCRIPTION("利用ioremap将物理地址映射成虚拟地址并提供给用户");
 MODULE_LICENSE("GPL");
 //初始化函数和卸载函数的注册
-module_init(mem_remap_ioremap_1_init);
-module_exit(mem_remap_ioremap_1_exit);
+module_init(mem_remap_ioremap_2_init);
+module_exit(mem_remap_ioremap_2_exit);
